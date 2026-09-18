@@ -100,7 +100,7 @@ namespace Kafka1C {
 
 	TEST_F(AddInNativeTest, PropRdKafkaVersion)
 	{
-		CheckPropRdKafkaVersion("2.10.0");
+		CheckPropRdKafkaVersion("2.15.1");
 	}
 
 	TEST_F(AddInNativeTest, PropLocale)

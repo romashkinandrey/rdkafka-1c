@@ -69,6 +69,10 @@ else()
 		RdKafka::rdkafka
 		RdKafka::rdkafka++
 		)
+
+	# Не экспортировать символы статически вшитых библиотек (OpenSSL, librdkafka, Boost, lz4, zstd, zlib):
+	# иначе в процессе 1С вызовы компоненты могут связаться с системными libssl/libcrypto другой версии
+	target_link_options(RdKafka1C PRIVATE "LINKER:--exclude-libs,ALL")
 endif()
 
 # Module tests

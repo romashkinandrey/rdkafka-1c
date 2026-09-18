@@ -1,0 +1,6 @@
+{
+  "name": "cyrus-sasl",
+  "version-string": "system",
+  "description": "Stub port: librdkafka links against the system Cyrus SASL (libsasl2.so.3 from cyrus-sasl-devel), like the official Confluent Linux builds. See ports-overlay/README.md.",
+  "supports": "linux"
+}
