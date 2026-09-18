@@ -50,9 +50,36 @@ export VCPKG_ROOT=~/vcpkg
 собирать на целевом дистрибутиве: там вместо `cyrus-sasl-devel` ставится `libsasl2-dev`
 (`sudo apt install libsasl2-dev pkg-config`), и библиотека будет зависеть от `libsasl2.so.2`.
 
+### RPM-пакеты (RHEL/OL 9)
+
+Готовые пакеты лежат в `package/rpm/`:
+
+| Пакет | Что ставит | Зависимости |
+|---|---|---|
+| `rdkafka-1c-<версия>.el9.x86_64.rpm` | `/opt/rdkafka-1c/libRdKafka1C.so`, `/opt/rdkafka-1c/RdKafka1C.zip` | `cyrus-sasl-lib`, `glibc-langpack-ru` и `glibc-gconv-extra` (локаль ru_RU, ISO-8859-5), glibc ≥ 2.34, libstdc++ (GLIBCXX_3.4.29) |
+| `rdkafka-1c-kerberos-<версия>.el9.noarch.rpm` | только README (метапакет) | `rdkafka-1c` той же версии, `cyrus-sasl-gssapi`, `krb5-workstation` |
+
+Установка: `sudo dnf install ./rdkafka-1c-*.x86_64.rpm` (и `./rdkafka-1c-kerberos-*.noarch.rpm`, если нужен Kerberos) —
+dnf сам поставит зависимости.
+
+Сборка пакетов после `./build.sh` и обновления `package/RdKafka1C.zip` (нужен `rpm-build`):
+
+```sh
+sudo dnf install -y rpm-build
+packaging/rpm/build-rpm.sh              # версия берётся из src/AddInNative.h и сверяется с INFO.XML в zip
+RELEASE=2 packaging/rpm/build-rpm.sh    # пересборка той же версии: выпуск нужно повысить
+```
+
+Скрипт проверяет, что `build/libRdKafka1C.so` совпадает с библиотекой внутри `package/RdKafka1C.zip`,
+добавляет лицензии вшитых библиотек из `build/vcpkg_installed` и кладёт `*.x86_64.rpm` и `*.noarch.rpm`
+в `package/rpm/`. Spec — `packaging/rpm/rdkafka-1c.spec`; пакет — перепаковка готовой библиотеки,
+поэтому src.rpm не собирается.
+
 ### Требования к серверу 1С (Linux)
 
 - пакет `cyrus-sasl-lib` — обязателен (без него компонента не загрузится);
+- локаль `ru_RU` (`glibc-langpack-ru`) и её конвертер ISO-8859-5 (`glibc-gconv-extra`) — обязательны: без них
+  кириллические строки из 1С (id сообщений, топики) становятся пустыми;
 - для аутентификации Kerberos (`sasl.mechanisms=GSSAPI`): `cyrus-sasl-gssapi`, `krb5-workstation` (команда `kinit`),
   настроенный `/etc/krb5.conf` и keytab, доступный пользователю, от имени которого работает сервер 1С.
 - в `sasl.kerberos.kinit.cmd` нельзя вписывать пароли и другие секреты (в том числе подстановкой `%{sasl.password}`):
