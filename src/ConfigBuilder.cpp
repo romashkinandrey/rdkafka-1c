@@ -1,8 +1,9 @@
 #include "ConfigBuilder.h"
 
-namespace Kafka1C {
+#include <algorithm>
+#include <cctype>
 
-    std::string CoverPaswords(std::string name, std::string value);
+namespace Kafka1C {
 
     ConfigBuilder::ConfigBuilder(Loger* Loger, ErrorHandler* Error) {
         loger = Loger;
@@ -102,13 +103,43 @@ namespace Kafka1C {
     /////////////////////////////////////////////////////////////////////////////
     // Support methods
 
-    std::string CoverPaswords(std::string name, std::string value) {
-        if (name == "sasl.password")
+    // Подстроки имён секретных свойств (регистр не важен): sasl.password, ssl.key.password,
+    // ssl.keystore.password, ssl.key.pem, sasl.oauthbearer.client.secret, sasl.oauthbearer.config,
+    // sasl.oauthbearer.assertion.private.key.pem/.passphrase и т.п.
+    // librdkafka помечает секретными ещё sasl.username, ssl.ca.pem, ssl.key.location и
+    // *.private.key.file - их не маскируем намеренно: это логин, публичный сертификат и пути к файлам,
+    // они нужны для диагностики.
+    // sasl.kerberos.kinit.cmd тоже не маскируем: librdkafka в режиме debug сама пишет в лог готовую
+    // команду kinit, поэтому секреты в эту настройку вписывать нельзя (см. doc/build.md).
+    static const char* const SensitiveMarkers[] = {
+        "password", "secret", "passphrase", "key.pem", "oauthbearer.config", "jaas"
+    };
+
+    bool IsSensitiveProperty(const std::string& Name) {
+        std::string name = Name;
+        std::transform(name.begin(), name.end(), name.begin(),
+            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+        for (const char* marker : SensitiveMarkers)
+            if (name.find(marker) != std::string::npos)
+                return true;
+
+        return false;
+    }
+
+    std::string CoverPaswords(const std::string& Name, const std::string& Value) {
+        if (Value.empty())
+            return Value;
+
+        // Закрытый ключ маскируется по содержимому, под каким бы именем он ни пришёл
+        if (IsSensitiveProperty(Name) || Value.find("PRIVATE KEY") != std::string::npos)
             return "***";
-        return value;
+
+        return Value;
     }
 
     void ConfigBuilder::LogConfigDump() {
+        // conf->dump() не скрывает секреты и отдаёт список во владение вызывающему
         std::list<std::string>* dump = conf->dump();
         std::stringstream stream;
 
@@ -117,14 +148,15 @@ namespace Kafka1C {
         for (auto it = dump->begin(); it != dump->end();) {
             std::string name = std::string(*it);
             it++;
+            if (it == dump->end())
+                break;
             std::string value = std::string(*it);
             it++;
 
-            if (name == "sasl.password")
-                value = "***";
-
             stream << std::endl << name << " = " << CoverPaswords(name, value);
         }
+        delete dump;
+
         loger->Debug(stream.str());
     }
 

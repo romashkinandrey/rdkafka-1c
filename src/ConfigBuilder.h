@@ -11,6 +11,12 @@
 
 namespace Kafka1C {
 
+    // Признак секретного свойства librdkafka (пароли, закрытые ключи, секреты OAuth)
+    bool IsSensitiveProperty(const std::string& Name);
+
+    // Значение свойства для записи в лог: секреты заменяются на "***"
+    std::string CoverPaswords(const std::string& Name, const std::string& Value);
+
     class ConfigBuilder {
 
     public:

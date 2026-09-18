@@ -83,6 +83,7 @@ add_executable(ModuleTests
 	test/MockAddInNative.cpp
 	test/MockRdKafka1C.cpp
 	test/MockKafkaConsumer.cpp
+	test/ConfigBuilderTest.cpp
 	test/MockProducer.cpp
 	test/MockMessage.cpp
 	src/RdKafka1C.cpp
