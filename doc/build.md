@@ -86,6 +86,37 @@ RELEASE=2 packaging/rpm/build-rpm.sh    # пересборка той же ве�
   при уровне логирования `debug` librdkafka пишет в лог компоненты готовую команду kinit и всю изменённую конфигурацию
   без маскирования этой настройки. Используйте keytab (`sasl.kerberos.keytab`).
 
+## Сборка под Windows
+
+Проверено на Windows 11 24H2 x64 (Visual Studio 2022 Build Tools, MSVC 14.44, CMake 3.31 из состава VS).
+
+Нужны Visual Studio 2022 или Build Tools с рабочей нагрузкой «Разработка классических приложений на C++»
+(MSVC x64, Windows SDK, CMake), Git и vcpkg на baseline из `vcpkg-configuration.json`. Perl, NASM и другие
+инструменты для сборки OpenSSL vcpkg скачивает сам. Команды выполняются в «x64 Native Tools Command Prompt
+for VS 2022» (там в PATH есть CMake из состава VS):
+
+```bat
+git clone https://github.com/microsoft/vcpkg C:\vcpkg
+git -C C:\vcpkg checkout 66c2e79629f49083131c93c9358a7bd1a4d7ffa6
+C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+set VCPKG_ROOT=C:\vcpkg
+```
+
+Затем по одному (оба скрипта в конце ждут нажатия клавиши):
+
+- `build.bat` — библиотека `build\Release\RdKafka1C.dll`;
+- `build-tests.bat` — модульные тесты `build\Release\ModuleTests.exe`.
+
+Особенности:
+
+- Триплет `x64-windows-static-md` задан в `CMakeLists.txt`, передавать его не нужно. OpenSSL, librdkafka и
+  остальные зависимости вшиваются в DLL. От системы нужны только библиотеки Windows и среда выполнения
+  VC++ 2015–2022 версии не ниже 14.44 (`MSVCP140.dll`, `VCRUNTIME140.dll`, `VCRUNTIME140_1.dll`).
+- Kerberos (GSSAPI) на Windows librdkafka реализует через встроенный SSPI с учётными данными пользователя,
+  под которым работает процесс: `sasl.kerberos.keytab` и `sasl.kerberos.kinit.cmd` там не используются.
+- Первая сборка с пустым кэшем vcpkg занимает около 40 минут, повторные — несколько минут
+  (двоичный кэш `%LOCALAPPDATA%\vcpkg\archives`).
+
 ## Разработка
 
 Для разработки на Windows и Linux использовался [MS VSCode](https://code.visualstudio.com/) для отладки на Windows из 1С [MS Visual Studio C++](https://visualstudio.microsoft.com/).

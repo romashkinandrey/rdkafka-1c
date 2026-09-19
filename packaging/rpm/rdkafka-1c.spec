@@ -3,7 +3,7 @@
 # packaging/rpm/build-rpm.sh, который передаёт версию и выпуск через --define "rdk_version X.Y.Z"
 # и --define "rdk_release N" (выпуск повышается при пересборке той же версии).
 
-%{!?rdk_version: %global rdk_version 1.3.1.1}
+%{!?rdk_version: %global rdk_version 1.3.1.2}
 %{!?rdk_release: %global rdk_release 1}
 
 # Бинарник уже собран в Release: не пересобираем debuginfo и не трогаем .so (strip изменил бы
@@ -102,6 +102,10 @@ chmod 0644 %{buildroot}%{_licensedir}/%{name}/third-party/*
 %doc %{_docdir}/%{name}-kerberos/README.kerberos.md
 
 %changelog
+* Sat Sep 19 2026 Andrey Romashkin <romashk.andrey@gmail.com> - 1.3.1.2-1
+- Fork build 2: RdKafka1C.dll (Windows) rebuilt from the fork sources: OpenSSL 3.5.8,
+  librdkafka 2.15.1 with zlib and zstd, secrets masked in the debug log
+
 * Sat Sep 19 2026 Andrey Romashkin <romashk.andrey@gmail.com> - 1.3.1.1-1
 - Fork build 1 of upstream rdkafka-1c 1.3.1 (see FORK.md)
 - OpenSSL 3.5.8, librdkafka 2.15.1 (ssl, sasl/GSSAPI, zlib, zstd, lz4)

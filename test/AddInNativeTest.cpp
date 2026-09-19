@@ -95,7 +95,7 @@ namespace Kafka1C {
 
 	TEST_F(AddInNativeTest, PropComponentVersion)
 	{
-		CheckPropComponentVersion("1.3.1.1");
+		CheckPropComponentVersion("1.3.1.2");
 	}
 
 	TEST_F(AddInNativeTest, PropRdKafkaVersion)
